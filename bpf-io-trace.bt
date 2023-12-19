@@ -1,0 +1,229 @@
+#!/usr/bin/env bpftrace 
+
+/*
+ * Desc: bpftrace script to capture info about IO syscalls
+ * Author: Rodrigo Nascimento
+ */
+
+#include <fcntl.h>
+
+BEGIN
+{
+    @ptrace = str($1);
+    printf("start_at=%s", strftime("%s.%f", nsecs));
+}
+
+tracepoint:syscalls:sys_enter_open,
+tracepoint:syscalls:sys_enter_openat,
+tracepoint:syscalls:sys_enter_openat2,
+/comm == @ptrace/
+{
+    @filename[tid] = args->filename;
+}
+
+tracepoint:syscalls:sys_enter_creat
+/comm == @ptrace/
+{
+    @filename[tid] = args->pathname;
+}
+
+tracepoint:syscalls:sys_exit_open*,
+tracepoint:syscalls:sys_exit_creat
+/ @filename[tid] /
+{
+    $ret = args->ret;
+    $fd = $ret >= 0 ? $ret : -1;
+    if ( $fd >= 0 ) {
+        @fdfilename[tid,$fd] = @filename[tid];
+        printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld", strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, str(@fdfilename[tid,$fd]), $fd);
+    }
+    delete(@filename[tid]);
+}
+
+tracepoint:syscalls:sys_enter_read
+/ @fdfilename[tid,args->fd] /
+{
+    @op_read_fd[tid] = args->fd;
+    @op_read_req_size_b[tid] = args->count;
+}
+
+tracepoint:syscalls:sys_exit_read
+/ @fdfilename[tid,@op_read_fd[tid]] /
+{
+    $ret = args->ret;
+    $bytes_read = $ret >=0 ? $ret : -1;
+
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld req_size_bytes=%ld bytes_read=%ld",
+        strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, str(@fdfilename[tid,@op_read_fd[tid]]), @op_read_fd[tid], @op_read_req_size_b[tid],
+        $bytes_read);
+
+    delete(@op_read_fd[tid]);
+    delete(@op_read_req_size_b[tid]);
+}
+
+tracepoint:syscalls:sys_enter_pread64
+/ @fdfilename[tid,args->fd] /
+{
+    @op_pread64_fd[tid] = args->fd;
+    @op_pread64_req_size_b[tid] = args->count;
+    @op_pread64_offset[tid] = args->pos;
+}
+
+tracepoint:syscalls:sys_exit_pread64
+/ @fdfilename[tid,@op_pread64_fd[tid]] /
+{
+    $ret = args->ret;
+    $bytes_read = $ret >=0 ? $ret : -1;
+
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld req_size_bytes=%ld offset=%ld bytes_read=%ld",
+        strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, str(@fdfilename[tid,@op_pread64_fd[tid]]), @op_pread64_fd[tid], @op_pread64_req_size_b[tid],
+        @op_pread64_offset[tid], $bytes_read);
+
+    delete(@op_pread64_fd[tid]);
+    delete(@op_pread64_req_size_b[tid]);
+    delete(@op_pread64_offset[tid]);
+}
+
+tracepoint:syscalls:sys_enter_write
+/ @fdfilename[tid,args->fd] /
+{
+    @op_write_fd[tid] = args->fd;
+    @op_write_req_size_b[tid] = args->count;
+}
+
+tracepoint:syscalls:sys_exit_write
+/ @fdfilename[tid,@op_write_fd[tid]] /
+{
+    $ret = args->ret;
+    $bytes_written = $ret >=0 ? $ret : -1;
+
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld req_size_bytes=%ld bytes_written=%ld",
+        strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, str(@fdfilename[tid,@op_write_fd[tid]]), @op_write_fd[tid], @op_write_req_size_b[tid],
+        $bytes_written);
+
+    delete(@op_write_fd[tid]);
+    delete(@op_write_req_size_b[tid]);
+}
+
+tracepoint:syscalls:sys_enter_pwrite64
+/ @fdfilename[tid,args->fd] /
+{
+    @op_pwrite64_fd[tid] = args->fd;
+    @op_pwrite64_req_size_b[tid] = args->count;
+    @op_pwrite64_offset[tid] = args->pos;
+}
+
+tracepoint:syscalls:sys_exit_pwrite64
+/ @fdfilename[tid,@op_pwrite64_fd[tid]] /
+{
+    $ret = args->ret;
+    $bytes_written = $ret >=0 ? $ret : -1;
+
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld req_size_bytes=%ld offset=%ld bytes_written=%ld",
+        strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, str(@fdfilename[tid,@op_pwrite64_fd[tid]]), @op_pwrite64_fd[tid], @op_pwrite64_req_size_b[tid],
+        @op_pwrite64_offset[tid], $bytes_written);
+
+    delete(@op_pwrite64_fd[tid]);
+    delete(@op_pwrite64_req_size_b[tid]);
+    delete(@op_pwrite64_offset[tid]);
+}
+
+tracepoint:syscalls:sys_enter_writev
+/ @fdfilename[tid,args->fd] /
+{
+    @op_writev_fd[tid] = args->fd;
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld ", strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, str(@fdfilename[tid,args->fd]), args->fd);
+}
+
+tracepoint:syscalls:sys_exit_writev
+/ @fdfilename[tid,@op_writev_fd[tid]] /
+{
+    $ret = args->ret;
+    $bytes_written = $ret >=0 ? $ret : -1;
+    delete(@op_writev_fd[tid]);
+    printf("bytes_written=%ld", $bytes_written);
+
+}
+
+tracepoint:syscalls:sys_enter_mmap
+/ @fdfilename[tid,args->fd] /
+{
+    @op_mmap_fd[tid] = args->fd;
+    @op_mmap_len[tid] = args->len;
+    @op_mmap_prot[tid] = args->prot;
+    @op_mmap_offset[tid] = args->off;
+}
+
+tracepoint:syscalls:sys_exit_mmap
+/ @fdfilename[tid,@op_mmap_fd[tid]] /
+{
+    $ret = args->ret;
+    if ( $ret >= 0 ) {
+        printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld prot=%ld offset=%ld req_size_bytes=%ld",
+        strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, str(@fdfilename[tid,@op_mmap_fd[tid]]), @op_mmap_fd[tid], @op_mmap_prot[tid],
+        @op_mmap_offset[tid], @op_mmap_len[tid]);
+    }
+
+    delete(@op_mmap_fd[tid]);
+    delete(@op_mmap_len[tid]);
+    delete(@op_mmap_prot[tid]);
+    delete(@op_mmap_offset[tid]);
+}
+
+tracepoint:syscalls:sys_enter_lseek
+/ @fdfilename[tid,args->fd] /
+{
+    @op_lseek_fd[tid] = args->fd;
+    @op_lseek_offset[tid] = args->offset;
+    @op_lseek_whence[tid] = args->whence;
+}
+
+tracepoint:syscalls:sys_exit_lseek
+/ @fdfilename[tid,@op_lseek_fd[tid]] /
+{
+    $ret = args->ret;
+    $offset = $ret >0 ? $ret : -1;
+
+    if ( $offset > 0) {
+        printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld offset=%ld whence=%ld",
+        strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, str(@fdfilename[tid,@op_lseek_fd[tid]]), @op_lseek_fd[tid], $offset, @op_lseek_whence[tid]);
+    }
+
+    delete(@op_lseek_fd[tid]);
+    delete(@op_lseek_offset[tid]);
+    delete(@op_lseek_whence[tid]);
+}
+
+tracepoint:syscalls:sys_enter_close
+/ @fdfilename[tid,args->fd] /
+{
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld", strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, str(@fdfilename[tid,args->fd]), args->fd);
+    delete(@fdfilename[tid,args->fd]);
+}
+
+END
+{
+    clear(@ptrace);
+    clear(@filename);
+    clear(@op_read_fd);
+    clear(@op_read_req_size_b);
+    clear(@op_pread64_fd);
+    clear(@op_pread64_req_size_b);
+    clear(@op_pread64_offset);
+    clear(@op_write_fd);
+    clear(@op_write_req_size_b);
+    clear(@op_pwrite64_fd);
+    clear(@op_pwrite64_req_size_b);
+    clear(@op_pwrite64_offset);
+    clear(@op_writev_fd);
+    clear(@op_mmap_fd);
+    clear(@op_mmap_len);
+    clear(@op_mmap_prot);
+    clear(@op_mmap_offset);
+    clear(@op_lseek_fd);
+    clear(@op_lseek_offset);
+    clear(@op_lseek_whence);
+    clear(@fdfilename);
+
+    printf("finished_at=%s\n", strftime("%s.%f", nsecs));
+}
