@@ -1,7 +1,5 @@
 #!/usr/bin/env bpftrace 
 
-export BPFTRACE_MAX_STRLEN=128
-
 /*
  * Desc: bpftrace script to capture info about IO syscalls
  * Author: Rodrigo Nascimento
