@@ -156,31 +156,6 @@ tracepoint:syscalls:sys_exit_writev
     delete(@op_writev_lat[tid]);
 }
 
-tracepoint:syscalls:sys_enter_mmap
-/ @fdfile[tid,args->fd] /
-{
-    @op_mmap_fd[tid] = args->fd;
-    @op_mmap_len[tid] = args->len;
-    @op_mmap_prot[tid] = args->prot;
-    @op_mmap_offset[tid] = args->off;
-}
-
-tracepoint:syscalls:sys_exit_mmap
-/ @fdfile[tid,@op_mmap_fd[tid]] /
-{
-    $ret = args->ret;
-    if ( $ret >= 0 ) {
-        printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld prot=%ld offset=%ld req_size_bytes=%ld\n",
-        strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_mmap_fd[tid]], @op_mmap_fd[tid], 
-        @op_mmap_prot[tid], @op_mmap_offset[tid], @op_mmap_len[tid]);
-    }
-
-    delete(@op_mmap_fd[tid]);
-    delete(@op_mmap_len[tid]);
-    delete(@op_mmap_prot[tid]);
-    delete(@op_mmap_offset[tid]);
-}
-
 tracepoint:syscalls:sys_enter_lseek
 / @fdfile[tid,args->fd] /
 {
@@ -233,10 +208,6 @@ END
     clear(@op_pwrite64_req_size_b);
     clear(@op_pwrite64_offset);
     clear(@op_writev_fd);
-    clear(@op_mmap_fd);
-    clear(@op_mmap_len);
-    clear(@op_mmap_prot);
-    clear(@op_mmap_offset);
     clear(@op_lseek_fd);
     clear(@op_lseek_offset);
     clear(@op_lseek_whence);
