@@ -197,6 +197,7 @@ tracepoint:syscalls:sys_enter_close
 
 END
 {
+    printf("finished_at=%s\n", strftime("%s.%f", nsecs));
     clear(@ptrace);
     clear(@filename);
     clear(@fdfile);
@@ -220,6 +221,4 @@ END
     clear(@op_write_lat);
     clear(@op_pwrite64_lat);
     clear(@op_writev_lat);
-
-    printf("finished_at=%s\n", strftime("%s.%f", nsecs));
 }
