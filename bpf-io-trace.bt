@@ -5,12 +5,6 @@
  * Author: Rodrigo Nascimento
  */
 
-config = {
-    max_map_keys=16384;
-    max_strlen=200;
-    perf_rb_pages=128
-}
-
 BEGIN
 {
     @ptrace = str($1);
