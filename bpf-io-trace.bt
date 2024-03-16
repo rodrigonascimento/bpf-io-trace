@@ -199,6 +199,26 @@ tracepoint:syscalls:sys_exit_fdatasync
     delete(@op_fdatasync_lat[tid]);
 }
 
+tracepoint:syscalls:sys_enter_fsync
+/ @fdfile[tid,args->fd] /
+{
+    @op_fsync_fd[tid] = args->fd;
+    @op_fsync_lat[tid] = nsecs;
+}
+
+tracepoint:syscalls:sys_exit_fsync
+/ @fdfile[tid,args->fd] /
+{
+    $ret = args->ret;
+
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld lat=%lld\n",
+        strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_fsync_fd[tid]], @op_fsync_fd[tid], 
+        (nsecs - @op_fsync_lat[tid]));
+
+    delete(@op_fsync_fd[tid]);
+    delete(@op_fsync_lat[tid]);
+}
+
 tracepoint:syscalls:sys_enter_close
 / @fdfile[tid,args->fd] /
 {
@@ -235,4 +255,8 @@ END
     clear(@op_write_lat);
     clear(@op_pwrite64_lat);
     clear(@op_writev_lat);
+    clear(@op_fdatasync_fd);
+    clear(@op_fdatasync_lat);
+    clear(@op_fsync_fd);
+    clear(@op_fsync_lat):
 }
