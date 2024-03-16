@@ -258,5 +258,5 @@ END
     clear(@op_fdatasync_fd);
     clear(@op_fdatasync_lat);
     clear(@op_fsync_fd);
-    clear(@op_fsync_lat):
+    clear(@op_fsync_lat);
 }
