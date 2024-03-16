@@ -187,7 +187,7 @@ tracepoint:syscalls:sys_enter_fdatasync
 }
 
 tracepoint:syscalls:sys_exit_fdatasync
-/ @fdfile[tid,args->fd] /
+/ @fdfile[tid,@op_fdatasync_fd[tid]] /
 {
     $ret = args->ret;
 
@@ -207,10 +207,8 @@ tracepoint:syscalls:sys_enter_fsync
 }
 
 tracepoint:syscalls:sys_exit_fsync
-/ @fdfile[tid,args->fd] /
+/ @fdfile[tid,@op_fsync_fd[tid]] /
 {
-    $ret = args->ret;
-
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld lat=%lld\n",
         strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_fsync_fd[tid]], @op_fsync_fd[tid], 
         (nsecs - @op_fsync_lat[tid]));
