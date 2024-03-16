@@ -13,7 +13,7 @@ BEGIN
 
 tracepoint:syscalls:sys_enter_open,
 tracepoint:syscalls:sys_enter_openat,
-tracepoint:syscalls:sys_enter_openat2,
+tracepoint:syscalls:sys_enter_openat2
 /comm == @ptrace/
 {
     @filename[tid] = args->filename;
