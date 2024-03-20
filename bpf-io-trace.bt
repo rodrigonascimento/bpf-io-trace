@@ -43,8 +43,8 @@ tracepoint:syscalls:sys_enter_read
 / @fdfile[tid,args->fd] /
 {
     @op_read_fd[tid] = args->fd;
-    @op_read_req_size_b[tid,@op_read_fd] = args->count;
-    @op_read_lat[tid,@op_read_fd] = nsecs
+    @op_read_req_size_b[tid,@op_read_fd[tid]] = args->count;
+    @op_read_lat[tid,@op_read_fd[tid]] = nsecs
 }
 
 tracepoint:syscalls:sys_exit_read
