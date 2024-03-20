@@ -42,24 +42,24 @@ tracepoint:syscalls:sys_exit_creat
 tracepoint:syscalls:sys_enter_read
 / @fdfile[tid,args->fd] /
 {
-    @op_read_fd[tid, args->fd] = args->fd;
-    @op_read_req_size_b[tid, args->fd] = args->count;
-    @op_read_lat[tid, args->fd] = nsecs
+    @op_read_fd[tid] = args->fd;
+    @op_read_req_size_b[tid,@op_read_fd] = args->count;
+    @op_read_lat[tid,@op_read_fd] = nsecs
 }
 
 tracepoint:syscalls:sys_exit_read
-/ @fdfile[tid,@op_read_fd[tid,args->fd]] /
+/ @fdfile[tid,@op_read_fd[tid]] /
 {
     $ret = args->ret;
     $bytes_read = $ret >=0 ? $ret : -1;
 
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld lat=%lld req_size_bytes=%ld bytes_read=%ld\n",
-        strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_read_fd[tid,args->fd]], @op_read_fd[tid,args->fd], 
-        (nsecs - @op_read_lat[tid,args->fd]), @op_read_req_size_b[tid,args->fd], $bytes_read);
+        strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_read_fd[tid]], @op_read_fd[tid], 
+        (nsecs - @op_read_lat[tid,@op_read_fd]), @op_read_req_size_b[tid,@op_read_fd], $bytes_read);
 
-    delete(@op_read_fd[tid,args->fd]);
-    delete(@op_read_req_size_b[tid,args->fd]);
-    delete(@op_read_lat[tid,args->fd]);
+    delete(@op_read_fd[tid]);
+    delete(@op_read_req_size_b[tid,@op_read_fd]);
+    delete(@op_read_lat[tid,@op_read_fd]);
 }
 
 tracepoint:syscalls:sys_enter_pread64
