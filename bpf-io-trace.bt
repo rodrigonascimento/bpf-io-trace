@@ -57,18 +57,18 @@ tracepoint:syscalls:sys_exit_read
         strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_read_fd[tid]], @op_read_fd[tid], 
         (nsecs - @op_read_lat[tid,@op_read_fd[tid]]), @op_read_req_size_b[tid,@op_read_fd[tid]], $bytes_read);
 
-    delete(@op_read_fd[tid]);
     delete(@op_read_req_size_b[tid,@op_read_fd[tid]]);
     delete(@op_read_lat[tid,@op_read_fd[tid]]);
+    delete(@op_read_fd[tid]);
 }
 
 tracepoint:syscalls:sys_enter_pread64
 / @fdfile[tid,args->fd] /
 {
     @op_pread64_fd[tid] = args->fd;
-    @op_pread64_req_size_b[tid] = args->count;
-    @op_pread64_offset[tid] = args->pos;
-    @op_pread64_lat[tid] = nsecs;
+    @op_pread64_req_size_b[tid,@op_pread64_fd[tid]] = args->count;
+    @op_pread64_offset[tid,@op_pread64_fd[tid]] = args->pos;
+    @op_pread64_lat[tid,@op_pread64_fd[tid]] = nsecs;
 }
 
 tracepoint:syscalls:sys_exit_pread64
@@ -79,20 +79,20 @@ tracepoint:syscalls:sys_exit_pread64
 
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld lat=%lld req_size_bytes=%ld offset=%ld bytes_read=%ld\n",
         strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_pread64_fd[tid]], @op_pread64_fd[tid], 
-        (nsecs - @op_pread64_lat[tid]), @op_pread64_req_size_b[tid], @op_pread64_offset[tid], $bytes_read);
+        (nsecs - @op_pread64_lat[tid,@op_pread64_fd[tid]]), @op_pread64_req_size_b[tid,@op_pread64_fd[tid]], @op_pread64_offset[tid,@op_pread64_fd[tid]], $bytes_read);
 
+    delete(@op_pread64_req_size_b[tid,@op_pread64_fd[tid]]);
+    delete(@op_pread64_offset[tid,@op_pread64_fd[tid]]);
+    delete(@op_pread64_lat[tid,@op_pread64_fd[tid]]);
     delete(@op_pread64_fd[tid]);
-    delete(@op_pread64_req_size_b[tid]);
-    delete(@op_pread64_offset[tid]);
-    delete(@op_pread64_lat[tid]);
 }
 
 tracepoint:syscalls:sys_enter_write
 / @fdfile[tid,args->fd] /
 {
     @op_write_fd[tid] = args->fd;
-    @op_write_req_size_b[tid] = args->count;
-    @op_write_lat[tid] = nsecs;
+    @op_write_req_size_b[tid,@op_write_fd[tid]] = args->count;
+    @op_write_lat[tid,@op_write_fd[tid]] = nsecs;
 }
 
 tracepoint:syscalls:sys_exit_write
@@ -103,20 +103,20 @@ tracepoint:syscalls:sys_exit_write
 
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld lat=%lld req_size_bytes=%ld bytes_written=%ld\n",
         strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_write_fd[tid]], @op_write_fd[tid], 
-        (nsecs - @op_write_lat[tid]), @op_write_req_size_b[tid], $bytes_written);
+        (nsecs - @op_write_lat[tid,@op_write_fd[tid]]), @op_write_req_size_b[tid,@op_write_fd[tid]], $bytes_written);
 
+    delete(@op_write_req_size_b[tid,@op_write_fd[tid]]);
+    delete(@op_write_lat[tid,@op_write_fd[tid]]);
     delete(@op_write_fd[tid]);
-    delete(@op_write_req_size_b[tid]);
-    delete(@op_write_lat[tid]);
 }
 
 tracepoint:syscalls:sys_enter_pwrite64
 / @fdfile[tid,args->fd] /
 {
     @op_pwrite64_fd[tid] = args->fd;
-    @op_pwrite64_req_size_b[tid] = args->count;
-    @op_pwrite64_offset[tid] = args->pos;
-    @op_pwrite64_lat[tid] = nsecs;
+    @op_pwrite64_req_size_b[tid,@op_pwrite64_fd[tid]] = args->count;
+    @op_pwrite64_offset[tid,@op_pwrite64_fd[tid]] = args->pos;
+    @op_pwrite64_lat[tid,@op_pwrite64_fd[tid]] = nsecs;
 }
 
 tracepoint:syscalls:sys_exit_pwrite64
@@ -127,19 +127,19 @@ tracepoint:syscalls:sys_exit_pwrite64
 
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld lat=%lld req_size_bytes=%ld offset=%ld bytes_written=%ld\n",
         strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_pwrite64_fd[tid]], @op_pwrite64_fd[tid], 
-        (nsecs - @op_pwrite64_lat[tid]), @op_pwrite64_req_size_b[tid], @op_pwrite64_offset[tid], $bytes_written);
+        (nsecs - @op_pwrite64_lat[tid,@op_pwrite64_fd[tid]]), @op_pwrite64_req_size_b[tid,@op_pwrite64_fd[tid]], @op_pwrite64_offset[tid,@op_pwrite64_fd[tid]], $bytes_written);
 
+    delete(@op_pwrite64_req_size_b[tid,@op_pwrite64_fd[tid]]);
+    delete(@op_pwrite64_offset[tid,@op_pwrite64_fd[tid]]);
+    delete(@op_pwrite64_lat[tid,@op_pwrite64_fd[tid]]);
     delete(@op_pwrite64_fd[tid]);
-    delete(@op_pwrite64_req_size_b[tid]);
-    delete(@op_pwrite64_offset[tid]);
-    delete(@op_pwrite64_lat[tid]);
 }
 
 tracepoint:syscalls:sys_enter_writev
 / @fdfile[tid,args->fd] /
 {
     @op_writev_fd[tid] = args->fd;
-    @op_writev_lat[tid] = nsecs;
+    @op_writev_lat[tid,@op_writev_fd[tid]] = nsecs;
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld ", strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, 
     pid, tid, @fdfilename[tid,args->fd], args->fd);
 }
@@ -149,17 +149,18 @@ tracepoint:syscalls:sys_exit_writev
 {
     $ret = args->ret;
     $bytes_written = $ret >=0 ? $ret : -1;
-    printf("lat=%lld bytes_written=%ld\n", (nsecs - @op_writev_lat[tid]), $bytes_written);
+    printf("lat=%lld bytes_written=%ld\n", (nsecs - @op_writev_lat[tid,@op_writev_fd[tid]]), $bytes_written);
+    
+    delete(@op_writev_lat[tid,@op_writev_fd[tid]]);
     delete(@op_writev_fd[tid]);
-    delete(@op_writev_lat[tid]);
 }
 
 tracepoint:syscalls:sys_enter_lseek
 / @fdfile[tid,args->fd] /
 {
     @op_lseek_fd[tid] = args->fd;
-    @op_lseek_offset[tid] = args->offset;
-    @op_lseek_whence[tid] = args->whence;
+    @op_lseek_offset[tid,@op_lseek_fd[tid]] = args->offset;
+    @op_lseek_whence[tid,@op_lseek_fd[tid]] = args->whence;
 }
 
 tracepoint:syscalls:sys_exit_lseek
@@ -171,19 +172,19 @@ tracepoint:syscalls:sys_exit_lseek
     if ( $offset > 0) {
         printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld offset=%ld whence=%ld\n",
         strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_lseek_fd[tid]], @op_lseek_fd[tid], 
-        $offset, @op_lseek_whence[tid]);
+        $offset, @op_lseek_whence[tid,@op_lseek_fd[tid]]);
     }
 
+    delete(@op_lseek_offset[tid,@op_lseek_fd[tid]]);
+    delete(@op_lseek_whence[tid,@op_lseek_fd[tid]]);
     delete(@op_lseek_fd[tid]);
-    delete(@op_lseek_offset[tid]);
-    delete(@op_lseek_whence[tid]);
 }
 
 tracepoint:syscalls:sys_enter_fdatasync
 / @fdfile[tid,args->fd] /
 {
     @op_fdatasync_fd[tid] = args->fd;
-    @op_fdatasync_lat[tid] = nsecs;
+    @op_fdatasync_lat[tid,@op_fdatasync_fd[tid]] = nsecs;
 }
 
 tracepoint:syscalls:sys_exit_fdatasync
@@ -193,17 +194,17 @@ tracepoint:syscalls:sys_exit_fdatasync
 
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld lat=%lld\n",
         strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_fdatasync_fd[tid]], @op_fdatasync_fd[tid], 
-        (nsecs - @op_fdatasync_lat[tid]));
+        (nsecs - @op_fdatasync_lat[tid,@op_fdatasync_fd[tid]]));
 
+    delete(@op_fdatasync_lat[tid,@op_fdatasync_fd[tid]]);
     delete(@op_fdatasync_fd[tid]);
-    delete(@op_fdatasync_lat[tid]);
 }
 
 tracepoint:syscalls:sys_enter_fsync
 / @fdfile[tid,args->fd] /
 {
     @op_fsync_fd[tid] = args->fd;
-    @op_fsync_lat[tid] = nsecs;
+    @op_fsync_lat[tid, @op_fsync_fd[tid]] = nsecs;
 }
 
 tracepoint:syscalls:sys_exit_fsync
@@ -211,10 +212,10 @@ tracepoint:syscalls:sys_exit_fsync
 {
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld lat=%lld\n",
         strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_fsync_fd[tid]], @op_fsync_fd[tid], 
-        (nsecs - @op_fsync_lat[tid]));
+        (nsecs - @op_fsync_lat[tid,@op_fsync_fd[tid]]));
 
+    delete(@op_fsync_lat[tid,@op_fsync_fd[tid]]);
     delete(@op_fsync_fd[tid]);
-    delete(@op_fsync_lat[tid]);
 }
 
 tracepoint:syscalls:sys_enter_close
