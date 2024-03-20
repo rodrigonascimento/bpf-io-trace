@@ -55,11 +55,11 @@ tracepoint:syscalls:sys_exit_read
 
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld lat=%lld req_size_bytes=%ld bytes_read=%ld\n",
         strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_read_fd[tid]], @op_read_fd[tid], 
-        (nsecs - @op_read_lat[tid,@op_read_fd]), @op_read_req_size_b[tid,@op_read_fd], $bytes_read);
+        (nsecs - @op_read_lat[tid,@op_read_fd[tid]]), @op_read_req_size_b[tid,@op_read_fd[tid]], $bytes_read);
 
     delete(@op_read_fd[tid]);
-    delete(@op_read_req_size_b[tid,@op_read_fd]);
-    delete(@op_read_lat[tid,@op_read_fd]);
+    delete(@op_read_req_size_b[tid,@op_read_fd[tid]]);
+    delete(@op_read_lat[tid,@op_read_fd[tid]]);
 }
 
 tracepoint:syscalls:sys_enter_pread64
