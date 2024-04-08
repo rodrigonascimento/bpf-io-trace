@@ -39,6 +39,13 @@ tracepoint:syscalls:sys_exit_creat
     }
 }
 
+tracepoint:syscalls:sys_enter_statx
+/ @filename[tid] /
+{
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fsize=%ld\n", strftime("%s.%f", nsecs), args->__syscall_nr,
+    probe, comm, pid, tid, str(args->filename), args->buffer->stx_size);
+}
+
 tracepoint:syscalls:sys_enter_read
 / @fdfile[tid,args->fd] /
 {
