@@ -87,6 +87,31 @@ tracepoint:syscalls:sys_exit_pread64
     delete(@op_pread64_fd[tid]);
 }
 
+tracepoint:syscalls:sys_enter_preadv
+/ @fdfile[tid,args->fd] /
+{
+    @op_preadv_fd[tid] = args->fd;
+    @op_preadv_lat[tid,@op_preadv_fd[tid]] = nsecs;
+    @op_preadv_offset_l[tid,@op_preadv_fd[tid]] = args->pos_l;
+    @op_preadv_offset_h[tid,@op_preadv_fd[tid]] = args->pos_h;
+
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld offset_l=%ld offset_h=%ld ", strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, 
+    pid, tid, @fdfilename[tid,@op_preadv_fd[tid]], @op_preadv_fd[tid], @op_preadv_offset_l[tid,@op_preadv_fd[tid]], @op_preadv_offset_h[tid,@op_preadv_fd[tid]]);
+}
+
+tracepoint:syscalls:sys_exit_preadv
+/ @fdfile[tid,@op_readv_fd[tid]] /
+{
+    $ret = args->ret;
+    $bytes_read = $ret >=0 ? $ret : -1;
+    printf("lat=%lld bytes_read=%ld\n", (nsecs - @op_readv_lat[tid,@op_preadv_fd[tid]]), $bytes_read);
+
+    delete(@op_preadv_fd[tid]);
+    delete(@op_preadv_lat[tid,@op_preadv_fd[tid]]);
+    delete(@op_preadv_offset_l[tid,@op_preadv_fd[tid]]);
+    delete(@op_preadv_offset_h[tid,@op_preadv_fd[tid]]);
+}
+
 tracepoint:syscalls:sys_enter_readv
 / @fdfile[tid,args->fd] /
 {
@@ -278,4 +303,10 @@ END
     clear(@op_fdatasync_lat);
     clear(@op_fsync_fd);
     clear(@op_fsync_lat);
+    clear(@op_readv_fd);
+    clear(@op_readv_lat);
+    clear(@op_preadv_fd);
+    clear(@op_preadv_lat);
+    clear(@op_preadv_offset_l);
+    clear(@op_preadv_offset_h);
 }
