@@ -180,6 +180,31 @@ tracepoint:syscalls:sys_exit_pwrite64
     delete(@op_pwrite64_fd[tid]);
 }
 
+tracepoint:syscalls:sys_enter_pwritev
+/ @fdfile[tid,args->fd] /
+{
+    @op_pwritev_fd[tid] = args->fd;
+    @op_pwritev_lat[tid,@op_pwritev_fd[tid]] = nsecs;
+    @op_pwritev_offset_l[tid,@op_pwritev_fd[tid]] = args->pos_l;
+    @op_pwritev_offset_h[tid,@op_pwritev_fd[tid]] = args->pos_h;
+
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld offset_l=%ld offset_h=%ld ", strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, 
+    pid, tid, @fdfilename[tid,@op_pwritev_fd[tid]], @op_pwritev_fd[tid], @op_pwritev_offset_l[tid,@op_pwritev_fd[tid]], @op_pwritev_offset_h[tid,@op_pwritev_fd[tid]]);
+}
+
+tracepoint:syscalls:sys_exit_pwritev
+/ @fdfile[tid,@op_readv_fd[tid]] /
+{
+    $ret = args->ret;
+    $bytes_written = $ret >=0 ? $ret : -1;
+    printf("lat=%lld bytes_written=%ld\n", (nsecs - @op_readv_lat[tid,@op_pwritev_fd[tid]]), $bytes_written);
+
+    delete(@op_pwritev_fd[tid]);
+    delete(@op_pwritev_lat[tid,@op_pwritev_fd[tid]]);
+    delete(@op_pwritev_offset_l[tid,@op_pwritev_fd[tid]]);
+    delete(@op_pwritev_offset_h[tid,@op_pwritev_fd[tid]]);
+}
+
 tracepoint:syscalls:sys_enter_writev
 / @fdfile[tid,args->fd] /
 {
@@ -309,4 +334,8 @@ END
     clear(@op_preadv_lat);
     clear(@op_preadv_offset_l);
     clear(@op_preadv_offset_h);
+    clear(@op_pwritev_fd);
+    clear(@op_pwritev_lat);
+    clear(@op_pwritev_offset_l);
+    clear(@op_pwritev_offset_h);
 }
