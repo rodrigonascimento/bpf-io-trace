@@ -255,7 +255,7 @@ tracepoint:syscalls:sys_enter_unlinkat
 / @filename[tid] /
 {
     @op_unlink_filename[tid] = args->pathname;
-    @op_unlink_lat[tid,@op_unlink_filename] = nsecs;
+    @op_unlink_lat[tid,@op_unlink_filename[tid]] = nsecs;
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s ", 
     strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, args->pathname);
 }
