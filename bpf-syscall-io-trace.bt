@@ -269,7 +269,7 @@ tracepoint:syscalls:sys_exit_unlink*
     }
 
     delete(@op_unlink_filename[tid]);
-    delete(@op_unlink_lat[tid,@op_unlink_filename]);
+    delete(@op_unlink_lat[tid,@op_unlink_filename[tid]]);
 } 
 
 tracepoint:syscalls:sys_enter_fdatasync
