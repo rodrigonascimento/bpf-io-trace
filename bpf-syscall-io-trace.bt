@@ -239,7 +239,7 @@ tracepoint:syscalls:sys_exit_lseek
     $ret = args->ret;
     $offset = $ret >0 ? $ret : -1;
 
-    if ( $offset > 0) {
+    if ( $offset > -1) {
         printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld offset=%ld whence=%ld\n",
         strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, @fdfilename[tid,@op_lseek_fd[tid]], @op_lseek_fd[tid], 
         $offset, @op_lseek_whence[tid,@op_lseek_fd[tid]]);
@@ -249,6 +249,28 @@ tracepoint:syscalls:sys_exit_lseek
     delete(@op_lseek_whence[tid,@op_lseek_fd[tid]]);
     delete(@op_lseek_fd[tid]);
 }
+
+tracepoint:syscalls:sys_enter_unlink,
+tracepoint:syscalls:sys_enter_unlinkat
+/ @filename[tid] /
+{
+    @op_unlink_filename[tid] = args->pathname;
+    @op_unlink_lat[tid,@op_unlink_filename] = nsecs;
+    printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s ", 
+    strftime("%s.%f", nsecs), args->__syscall_nr, probe, comm, pid, tid, args->pathname);
+}
+
+tracepoint:syscalls:sys_exit_unlink*
+/ @op_unlink_filename[tid] /
+{
+    $ret = args->ret;
+    if ( $ret > -1 ) {
+        printf("lat=%lld\n", (nsecs - @op_unlink_lat[tid,@op_unlink_filename[tid]]));
+    }
+
+    delete(@op_unlink_filename[tid]);
+    delete(@op_unlink_lat[tid,@op_unlink_filename]);
+} 
 
 tracepoint:syscalls:sys_enter_fdatasync
 / @fdfile[tid,args->fd] /
