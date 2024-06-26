@@ -8,6 +8,7 @@
 BEGIN
 {
     @ptrace = str($1);
+    @app_dir = str($2);
     printf("start_at=%s\n", strftime("%s.%f", nsecs));
 }
 
@@ -16,13 +17,17 @@ tracepoint:syscalls:sys_enter_openat,
 tracepoint:syscalls:sys_enter_openat2
 /comm == @ptrace/
 {
-    @filename[tid] = args->filename;
+    if (strcontains(str(args->filename),@app_dir)) {
+        @filename[tid] = args->filename;
+    }
 }
 
 tracepoint:syscalls:sys_enter_creat
 /comm == @ptrace/
 {
-    @filename[tid] = args->pathname;
+    if (strcontains(str(args->filename),@app_dir)) {
+        @filename[tid] = args->pathname;
+    }
 }
 
 tracepoint:syscalls:sys_exit_open*,
