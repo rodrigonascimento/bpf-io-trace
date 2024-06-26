@@ -320,8 +320,8 @@ tracepoint:syscalls:sys_enter_close
 {
     printf("time=%s syscall=%d probe=%s process=%s pid=%d tid=%d filename=%s fd=%ld\n", strftime("%s.%f", nsecs), args->__syscall_nr, 
     probe, comm, pid, tid, @fdfilename[tid,args->fd], args->fd);
-    delete(@fdfile[tid,args->fd]);
     delete(@fdfilename[tid,args->fd]);
+    delete(@fdfile[tid,args->fd]);
     delete(@filename[tid]);
 }
 
@@ -329,6 +329,7 @@ END
 {
     printf("finished_at=%s\n", strftime("%s.%f", nsecs));
     clear(@ptrace);
+    clear(@app_dir);
     clear(@filename);
     clear(@fdfile);
     clear(@fdfilename);
